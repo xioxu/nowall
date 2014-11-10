@@ -30,4 +30,4 @@
 然后在浏览器上配置上http代理，即可正常使用, chrome推荐使用Switchy!，极端好用！
 
 
-最后感谢https://www.zybuluo.com/mdeditor提供这么好的工具，使我可以迅速的写出一个md文件！
+最后感谢https://www.zybuluo.com/mdeditor   提供这么好的工具，使我可以迅速的写出一个md文件！
