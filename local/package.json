@@ -1,0 +1,21 @@
+{
+  "name": "nowallServer",
+  "version": "1.0.0",
+  "description": "nowall server side code",
+  "keywords": [
+    "Node.js",
+    "nowall",
+    "proxy",
+    "http proxy"
+  ],
+  "author": {
+    "name": "NathanXu",
+    "email": "mailme.xu#gmail.com",
+    "url": "http://blog.datafiddle.net/"
+  },
+  "dependencies": {
+      "request":"*",
+      "colors":"*"
+  },
+  "main": "server.js"
+}
