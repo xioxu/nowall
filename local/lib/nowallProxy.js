@@ -12,7 +12,6 @@ var cachedHost= new Array();
 var request = require("request");
 var pem =require("./pem");
 var config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
-console.log(config);
 var proxySiteUrl =config.proxyServerAddr;
 var ca_vendor = 'NoWall';
 
@@ -55,8 +54,8 @@ var cipher = ['ECDHE-ECDSA-AES256-SHA',
 var process_options = function(proxy_options) {
     var options = proxy_options || {}
 
-    if(!options.proxy_port)            options.proxy_port       = 8787;
-    if(!options.mitm_port)             options.mitm_port        = 8788;
+    if(!options.proxy_port)            options.proxy_port       = config.httpProxyPort;
+    if(!options.mitm_port)             options.mitm_port        = config.internalUseMitmPort;
     if(!options.verbose)     options.verbose          = true;
     if(!options.proxy_write === true)  options.proxy_write      = false;
     if(!options.proxy_write_path)      options.proxy_write_path = '/tmp/proxy';

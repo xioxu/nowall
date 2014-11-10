@@ -1,3 +1,5 @@
 {
-    "proxyServerAddr":"http://yourserver:yourport"
+    "proxyServerAddr":"http://localhost:8089",
+	"httpProxyPort":"8787",
+	"internalUseMitmPort":"8788"
 }
