@@ -1,3 +1,4 @@
 {
-    "proxyServerPort":8089
+    "proxyServerHttpsPort":9081,
+    "proxyServerHttpPort":9082
 }

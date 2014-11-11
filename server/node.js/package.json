@@ -15,7 +15,8 @@
   },
   "dependencies": {
       "express": "~3.4.4",
-      "request":"*"
+      "request":"*",
+      "spdy":"*"
   },
   "main": "server.js"
 }

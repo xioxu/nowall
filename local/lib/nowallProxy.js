@@ -7,7 +7,7 @@ var https = require('https')
     , clrs  = require('colors')
     , crypto=require('crypto');
 
-
+var spdy = require('spdy');
 var cachedHost= new Array();
 var request = require("request");
 var pem =require("./pem");
@@ -74,7 +74,17 @@ var handle_request = function( that,req, res,type) {
      
 	var startTime = new Date();
     req.headers.fetchurl=fetchUrl;
-    var proxtReq = request(proxySiteUrl);
+
+
+    var proxtReq = request(proxySiteUrl,{
+        rejectUnauthorized: false,
+        requestCert: true,
+        spdy: {
+            plain: false,
+            ssl: false,
+            version: 3 // Force SPDY version
+        }
+    });
 	proxtReq.on("response",function(){
 	   var endTime = new Date();
 	   tipMsg(fetchUrl + " " +  (endTime.getTime()-startTime.getTime() + "ms").green);
@@ -133,7 +143,7 @@ var _getCommonName = function(host){
 };
 
 var debugMsg = function(msg){
-    if(true){
+    if(config.Debug){
         console.log(msg);
     }
 }

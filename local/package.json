@@ -15,7 +15,8 @@
   },
   "dependencies": {
       "request":"*",
-      "colors":"*"
+      "colors":"*",
+      "spdy":"*"
   },
   "main": "server.js"
 }

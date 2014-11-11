@@ -1,5 +1,6 @@
 {
-    "proxyServerAddr":"http://localhost:8089",
+    "proxyServerAddr":"yout server addr(http or https)",
 	"httpProxyPort":"8787",
-	"internalUseMitmPort":"8788"
+	"internalUseMitmPort":"8788",
+	"Debug":true
 }

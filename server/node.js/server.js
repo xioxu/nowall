@@ -3,7 +3,20 @@
 var request = require("request");
 var express = require("express");
 var fs = require("fs");
+var spdy = require('spdy');
 var config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
+
+var spdyOptions = {
+    key: fs.readFileSync(__dirname + '/nowall.crt'),
+    cert: fs.readFileSync(__dirname + '/nowall.crt'),
+    ca: fs.readFileSync(__dirname + '/ca.crt'),
+
+    // **optional** SPDY-specific options
+    windowSize: 1024 * 1024, // Server's window size
+
+    // **optional** if true - server will send 3.1 frames on 3.0 *plain* spdy
+    autoSpdy31: false
+};
 
 var nowallServerApp = function() {
 
@@ -21,7 +34,8 @@ var nowallServerApp = function() {
     self.setupVariables = function() {
         //  Set the environment variables we need.
         self.ipaddress = process.env.OPENSHIFT_NODEJS_IP;
-        self.port      = process.env.OPENSHIFT_NODEJS_PORT || config.proxyServerPort;
+        self.httpPort      = process.env.OPENSHIFT_NODEJS_PORT || config.proxyServerHttpPort;
+        self.httpsPort = config.proxyServerHttpsPort || 443;
 
         if (typeof self.ipaddress === "undefined") {
             //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
@@ -69,9 +83,7 @@ var nowallServerApp = function() {
      */
     self.initializeServer = function() {
 
-        self.app = express.createServer();
-
-        self.app.use(function(req,res){
+        var proxyFunc = function(req,res){
 
             if(!req.headers.fetchurl) {
                 return res.end('must have fetchUrl!');
@@ -82,7 +94,15 @@ var nowallServerApp = function() {
             var x = request(request_url);
             req.pipe(x);
             x.pipe(res);
-        });
+        };
+
+        self.httpSvr = express.createServer();
+
+        self.app = express();
+        self.httpsSvr = spdy.createServer(spdyOptions,self.app);
+
+        self.httpSvr.use(proxyFunc);
+        self.app.use(proxyFunc);
     };
 
     /**
@@ -101,9 +121,14 @@ var nowallServerApp = function() {
      */
     self.start = function() {
         //  Start the app on the specific interface (and port).
-        self.app.listen(self.port, self.ipaddress, function() {
-            console.log('%s: Node server started on %s:%d ...',
-                Date(Date.now() ), self.ipaddress, self.port);
+        self.httpsSvr.listen(self.httpsPort, self.ipaddress, function() {
+            console.log('%s: Node server(spdy) started on %s:%d ...',
+                Date(Date.now() ), self.ipaddress, self.httpsPort);
+        });
+
+        self.httpSvr.listen(self.httpPort, self.ipaddress, function() {
+            console.log('%s: Node server(http) started on %s:%d ...',
+                Date(Date.now() ), self.ipaddress, self.httpPort);
         });
     };
 };   /*  Sample Application.  */
