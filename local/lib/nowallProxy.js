@@ -71,20 +71,27 @@ var handle_request = function( that,req, res,type) {
     if(type === "https"){
         fetchUrl = "https://" + req.headers.host + req.url;
     }
+
+   // req.headers.connection = "close";
      
 	var startTime = new Date();
     req.headers.fetchurl=fetchUrl;
 
+    var reqOptions = null;
 
-    var proxtReq = request(proxySiteUrl,{
-        rejectUnauthorized: false,
-        requestCert: true,
-        spdy: {
-            plain: false,
-            ssl: false,
-            version: 3 // Force SPDY version
-        }
-    });
+    if(proxySiteUrl.toLowerCase().substr(0,5) === "https"){
+        reqOptions = {
+            rejectUnauthorized: false,
+            requestCert: true,
+            spdy: {
+                plain: false,
+                ssl: false,
+                version: 3 // Force SPDY version
+            }
+        };
+    }
+
+    var proxtReq = request(proxySiteUrl,reqOptions);
 	proxtReq.on("response",function(){
 	   var endTime = new Date();
 	   tipMsg(fetchUrl + " " +  (endTime.getTime()-startTime.getTime() + "ms").green);
@@ -165,20 +172,20 @@ var verifyCert = function(host,callback){
     debugMsg("Search host cert file:" + host);
 
     var convertedHostName = _getCommonName(host);
-    var certPath = path.join(__dirname, 'certs', convertedHostName + ".crt");
+    var certPath =  './certs/' + convertedHostName + ".crt";
 
     if(fs.existsSync(certPath)){
         debugMsg("Found cert file for :" + host);
         callback(null,certPath);
     }
     else{
-        debugMsg("Try to create a new cert file for :" + host);
+        debugMsg("Try to create a new cert file for :" + host + ", since not found:" + certPath);
           createCertFile(convertedHostName,function(err,newCertPath){
             if(err){
                 errorMsg("cert file create failed.".red);
             }
             else{
-                debugMsg("cert file create completely."  .green);
+                debugMsg("cert file create completely."  .green + "  " + newCertPath);
                 callback(null,newCertPath);
             }
         });
@@ -257,11 +264,12 @@ module.exports = function(proxy_options, processor_class) {
                 cachedHost[_getCommonName(req.headers.host)] = certPath;
                 var proxy = net.createConnection(that.options.mitm_port, 'localhost');
 
-                // socket.write( "HTTP/1.0 200 Connection established\r\nProxy-agent: Netscape-Proxy/1.1\r\n\r\n");
-                socket.write("HTTP/1.1 200 Connection established\r\nConnection: close\r\n\r\n");
+                 socket.write( "HTTP/1.0 200 Connection established\r\n\r\n");
+               // socket.write("HTTP/1.1 200 Connection established\r\nConnection: close\r\n\r\n");
 
                 // connect pipes
-                proxy.on( 'data', function(d) { safelySocketWrite(socket,d);   });
+                socket.pipe(proxy).pipe(socket);
+            /*    proxy.on( 'data', function(d) { safelySocketWrite(socket,d);   });
                 socket.on('data', function(d) { safelySocketWrite(proxy,d); });
 
                 proxy.on( 'end',  function()  { socket.end()      });
@@ -271,7 +279,7 @@ module.exports = function(proxy_options, processor_class) {
                 socket.on('close',function()  { proxy.end()       });
 
                 proxy.on( 'error',function()  { socket.end()      });
-                socket.on('error',function()  { proxy.end()       });
+                socket.on('error',function()  { proxy.end()       }); */
             }
         });
 
