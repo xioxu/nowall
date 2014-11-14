@@ -5,6 +5,7 @@ var express = require("express");
 var fs = require("fs");
 var spdy = require('spdy');
 var config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
+var directServer = require("./directProxyServer");
 
 var spdyOptions = {
     key: fs.readFileSync(__dirname + '/nowall.crt'),
@@ -36,6 +37,7 @@ var nowallServerApp = function() {
         self.ipaddress = process.env.OPENSHIFT_NODEJS_IP;
         self.httpPort      = process.env.OPENSHIFT_NODEJS_PORT || config.proxyServerHttpPort;
         self.httpsPort = config.proxyServerHttpsPort || 443;
+        self.directPort = config.directProxyServerHttpPort;
 
         if (typeof self.ipaddress === "undefined") {
             //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
@@ -89,11 +91,18 @@ var nowallServerApp = function() {
                 return res.end('must have fetchUrl!');
             }
 
+            req.headers.host = req.headers.originalhost;
             var request_url=req.headers.fetchurl;
-            delete req.headers.fetchurl;
-            var x = request(request_url);
-            req.pipe(x);
-            x.pipe(res);
+
+            delete req.headers["fetchurl"];
+            delete req.headers["proxy-connection"];
+            delete req.headers["originalhost"];
+
+            var proxyReq = request(request_url,{followRedirect:false});
+
+
+            req.pipe(proxyReq);
+            proxyReq.pipe(res);
         };
 
         self.httpSvr = express.createServer();
@@ -130,6 +139,10 @@ var nowallServerApp = function() {
             console.log('%s: Node server(http) started on %s:%d ...',
                 Date(Date.now() ), self.ipaddress, self.httpPort);
         });
+
+        directServer(self.directPort);
+        console.log('%s: Node direct proxy server(http) started on %s:%d ...',
+            Date(Date.now() ), self.ipaddress, self.directPort);
     };
 };   /*  Sample Application.  */
 

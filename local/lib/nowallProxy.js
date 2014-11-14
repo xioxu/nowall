@@ -76,11 +76,13 @@ var handle_request = function( that,req, res,type) {
      
 	var startTime = new Date();
     req.headers.fetchurl=fetchUrl;
+    req.headers.originalhost = req.headers.host;
 
-    var reqOptions = null;
+    var reqOptions = {followRedirect:false};
 
     if(proxySiteUrl.toLowerCase().substr(0,5) === "https"){
         reqOptions = {
+            followRedirect:false,
             rejectUnauthorized: false,
             requestCert: true,
             spdy: {
@@ -92,7 +94,7 @@ var handle_request = function( that,req, res,type) {
     }
 
     var proxtReq = request(proxySiteUrl,reqOptions);
-	proxtReq.on("response",function(){
+	proxtReq.on("response",function(proxRes){
 	   var endTime = new Date();
 	   tipMsg(fetchUrl + " " +  (endTime.getTime()-startTime.getTime() + "ms").green);
 	});
