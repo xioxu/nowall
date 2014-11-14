@@ -130,19 +130,34 @@ var nowallServerApp = function() {
      */
     self.start = function() {
         //  Start the app on the specific interface (and port).
-        self.httpsSvr.listen(self.httpsPort, self.ipaddress, function() {
+		
+		try{
+		    self.httpsSvr.listen(self.httpsPort, self.ipaddress, function() {
             console.log('%s: Node server(spdy) started on %s:%d ...',
                 Date(Date.now() ), self.ipaddress, self.httpsPort);
-        });
+          });
+		}
+		catch(err){
+		   console.log(self.httpsPort + " can not be opened, you may need to change it.");
+		}
+    
 
+	   try{
         self.httpSvr.listen(self.httpPort, self.ipaddress, function() {
             console.log('%s: Node server(http) started on %s:%d ...',
                 Date(Date.now() ), self.ipaddress, self.httpPort);
-        });
+        });}
+		catch(err){
+		   console.log(self.httpPort + " can not be opened, you may need to change it.");
+		}
 
-        directServer(self.directPort);
-        console.log('%s: Node direct proxy server(http) started on %s:%d ...',
+		 try{
+          directServer(self.directPort);
+          console.log('%s: Node direct proxy server(http) started on %s:%d ...',
             Date(Date.now() ), self.ipaddress, self.directPort);
+	     }catch(err){
+		   console.log(self.directPort + " can not be opened, you may need to change it.");
+		}
     };
 };   /*  Sample Application.  */
 
