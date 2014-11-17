@@ -29,13 +29,14 @@ Goagent走的就是这样的路子，只是它过于依赖GAE，导致goagent过
 ## 通用部署简单说明
 ###服务端
 使用nowall前，您需要准备好一个可以访问国外网站的服务器，目前由于服务端只有node.js版本的，所以您的服务器需要支持node.js。
-之后您只需要将代码中的server/node.js文件夹下的内容upload到您的服务器，运行server.js即可，当然您也许需要修改config.json来修改代理端口。
+之后您只需要将代码中的server/node.js文件夹下的内容upload到您的服务器，运行server.js即可(第一次执行前需要运行npm install,另外推荐使用forever启动server.js)，当然您也许需要修改config.json来修改代理端口。
 
 ###客户端
 > * 第一版毫无疑问，您得先安装好node.js
 > * 为支持https访问，本程序模拟goagent的原理，在本地会生成证书，所以您需要在 本地安装好openssl，安装方法可以参考相关教程，安装完成后您应该可以在打开命令行后执行openssl得到正确的反馈。
 同时您需要将local文件夹下的ca.crt导入到您浏览器的根目录，您可能问我如何保证这个证书的安全，说实话我也没办法保证，所以您不怕麻烦的话就自己生成ca.key和ca.crt覆盖我提供的也可以。
-> * 最后打开local文件夹，修改config.json,运行start.js。
+> * 最后打开local文件夹，修改config.json,运行start.js(第一次执行前需要运行npm install)。
+注：windows下安装openssl可以直接从http://slproweb.com/products/Win32OpenSSL.html 下载编译好的，先下载安装Visual C++ 2008 Redistributables，再下载安装Win32 OpenSSL v1.0.1j Light，安装完成后需要将openssl所在目录加入环境变量path,使得命令行可以访问openssl。
 
 然后在浏览器上配置上http代理，即可正常使用, chrome推荐使用Switchy!，那还是极好的！
 

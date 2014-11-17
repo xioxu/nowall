@@ -194,70 +194,19 @@ var verifyCert = function(host,callback){
     }
 };
 
-
-module.exports = function(proxy_options, processor_class) {
-    this.options = process_options(proxy_options);
-
-    var that = this;
-    var https_opts = {
-        rejectUnauthorized: false,
-        key: fs.readFileSync('./ca.key', 'utf8'),
-        cert: fs.readFileSync('./ca.crt', 'utf8'),
-        ca: fs.readFileSync('./ca.crt', 'utf8'),
-        SNICallback: function (hostname) {
-
-            var sslHost = hostname;
-            var certFile = cachedHost[_getCommonName(sslHost)];
-
-            if(certFile){
-                debugMsg("Added cert file for : " + sslHost);
-
-                var context = crypto.createCredentials({
-                    key:  fs.readFileSync(certFile),
-                    cert: fs.readFileSync(certFile),
-                    ca: [fs.readFileSync('./ca.crt')]}).context;
-
-                context.setCiphers(cipher);
-                return context;
-            }
-            else{
-                errorMsg(("Cert file wrong : " + sslHost).red);
-                return null;
-            }
-        }
-    };
-
-    var mitm_server = https.createServer(https_opts, function (request, response) {
-        handle_request(that, request, response, "https");
-    });
-
-    mitm_server.addListener('error', function() {
-        errorMsg("error on server?")
-    })
-
-    mitm_server.listen(this.options.mitm_port);
-
-	if(!fs.existsSync("./certs")){
-	    fs.mkdirSync("./certs");
-	}
-	
-    if(this.options.verbose){
-        console.log('https man-in-the-middle proxy server'.blue + ' started '.green.bold + 'on port '.blue + (""+this.options.mitm_port).yellow);
+var safelySocketWrite = function(socket,data){
+    try {
+        socket.write(data);
     }
+    catch(err) {
+        errorMsg(err);
+    }
+}
 
+var startHttpListener = function(options,that){
     var server = http.createServer(function(request, response) {
         handle_request(that, request, response, "http");
     });
-
-
-    var safelySocketWrite = function(socket,data){
-        try {
-            socket.write(data);
-        }
-        catch(err) {
-            errorMsg(err);
-        }
-    }
 
     // Handle connect request (for https)
     server.addListener('connect', function(req, socket, upgradeHead) {
@@ -266,22 +215,11 @@ module.exports = function(proxy_options, processor_class) {
                 cachedHost[_getCommonName(req.headers.host)] = certPath;
                 var proxy = net.createConnection(that.options.mitm_port, 'localhost');
 
-                 socket.write( "HTTP/1.0 200 Connection established\r\n\r\n");
-               // socket.write("HTTP/1.1 200 Connection established\r\nConnection: close\r\n\r\n");
+                socket.write( "HTTP/1.0 200 Connection established\r\n\r\n");
+                // socket.write("HTTP/1.1 200 Connection established\r\nConnection: close\r\n\r\n");
 
                 // connect pipes
                 socket.pipe(proxy).pipe(socket);
-            /*    proxy.on( 'data', function(d) { safelySocketWrite(socket,d);   });
-                socket.on('data', function(d) { safelySocketWrite(proxy,d); });
-
-                proxy.on( 'end',  function()  { socket.end()      });
-                socket.on('end',  function()  { proxy.end()       });
-
-                proxy.on( 'close',function()  { socket.end()      });
-                socket.on('close',function()  { proxy.end()       });
-
-                proxy.on( 'error',function()  { socket.end()      });
-                socket.on('error',function()  { proxy.end()       }); */
             }
         });
 
@@ -291,9 +229,70 @@ module.exports = function(proxy_options, processor_class) {
         sys.log("error on server?")
     })
 
-    server.listen(this.options.proxy_port);
-    if(this.options.verbose) console.log('http proxy server '.blue + 'started '.green.bold + 'on port '.blue + (""+this.options.proxy_port).yellow);
+    server.listen(options.proxy_port);
+      if(options.verbose)
+          console.log('http proxy server '.blue + 'started '.green.bold + 'on port '.blue + (""+options.proxy_port).yellow);
+
+    startMtim(options,that);
+    return server;
 }
+
+ var startMtim= function(options,that){
+
+     var https_opts = {
+         rejectUnauthorized: false,
+         key: fs.readFileSync('./ca.key', 'utf8'),
+         cert: fs.readFileSync('./ca.crt', 'utf8'),
+         ca: fs.readFileSync('./ca.crt', 'utf8'),
+         SNICallback: function (hostname) {
+
+             var sslHost = hostname;
+             var certFile = cachedHost[_getCommonName(sslHost)];
+
+             if(certFile){
+                 debugMsg("Added cert file for : " + sslHost);
+
+                 var context = crypto.createCredentials({
+                     key:  fs.readFileSync(certFile),
+                     cert: fs.readFileSync(certFile),
+                     ca: [fs.readFileSync('./ca.crt')]}).context;
+
+                 context.setCiphers(cipher);
+                 return context;
+             }
+             else{
+                 errorMsg(("Cert file wrong : " + sslHost).red);
+                 return null;
+             }
+         }
+     };
+
+     var mitm_server = https.createServer(https_opts, function (request, response) {
+         handle_request(that, request, response, "https");
+     });
+
+     mitm_server.addListener('error', function() {
+         errorMsg("error on server?")
+     })
+
+     mitm_server.listen(options.mitm_port);
+
+     if(options.verbose){
+         console.log('https man-in-the-middle proxy server'.blue + ' started '.green.bold + 'on port '.blue + (""+options.mitm_port).yellow);
+     }
+
+     return mitm_server;
+ }
+
+module.exports = function(proxy_options, processor_class) {
+    this.options = process_options(proxy_options);
+
+	if(!fs.existsSync("./certs")){
+	    fs.mkdirSync("./certs");
+	}
+    var that = this;
+    startHttpListener(this.options,that);
+  }
 
 //处理各种错误
 process.on('uncaughtException', function(err)
