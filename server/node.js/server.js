@@ -88,7 +88,7 @@ var nowallServerApp = function() {
         var proxyFunc = function(req,res){
 
             if(!req.headers.fetchurl) {
-                return res.end('must have fetchUrl!');
+                return res.end('This is a private page!');
             }
 
             req.headers.host = req.headers.originalhost;
