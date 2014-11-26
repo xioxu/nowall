@@ -203,6 +203,10 @@ var safelySocketWrite = function(socket,data){
     }
 }
 
+var getCertHost = function(host){
+  return host.split(":")[0];
+}
+
 var startHttpListener = function(options,that){
     var server = http.createServer(function(request, response) {
         handle_request(that, request, response, "http");
@@ -210,9 +214,9 @@ var startHttpListener = function(options,that){
 
     // Handle connect request (for https)
     server.addListener('connect', function(req, socket, upgradeHead) {
-        verifyCert(req.headers.host.split(":")[0],function(err,certPath){
+        verifyCert(getCertHost(req.headers.host),function(err,certPath){
             if(!err){
-                cachedHost[_getCommonName(req.headers.host)] = certPath;
+                cachedHost[_getCommonName(getCertHost(req.headers.host))] = certPath;
                 var proxy = net.createConnection(that.options.mitm_port, 'localhost');
 
                 socket.write( "HTTP/1.0 200 Connection established\r\n\r\n");
@@ -246,7 +250,7 @@ var startHttpListener = function(options,that){
          ca: fs.readFileSync('./ca.crt', 'utf8'),
          SNICallback: function (hostname) {
 
-             var sslHost = hostname;
+             var sslHost = getCertHost(hostname);
              var certFile = cachedHost[_getCommonName(sslHost)];
 
              if(certFile){
