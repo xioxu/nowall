@@ -210,7 +210,7 @@ var startHttpListener = function(options,that){
 
     // Handle connect request (for https)
     server.addListener('connect', function(req, socket, upgradeHead) {
-        verifyCert(req.headers.host,function(err,certPath){
+        verifyCert(req.headers.host.split(":")[0],function(err,certPath){
             if(!err){
                 cachedHost[_getCommonName(req.headers.host)] = certPath;
                 var proxy = net.createConnection(that.options.mitm_port, 'localhost');
