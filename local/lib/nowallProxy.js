@@ -72,8 +72,6 @@ var handle_request = function( that,req, res,type) {
         fetchUrl = "https://" + req.headers.host + req.url;
     }
 
-   // req.headers.connection = "close";
-     
 	var startTime = new Date();
     req.headers.fetchurl=fetchUrl;
     req.headers.originalhost = req.headers.host;
@@ -96,7 +94,7 @@ var handle_request = function( that,req, res,type) {
     var proxtReq = request(proxySiteUrl,reqOptions);
 	proxtReq.on("response",function(proxRes){
 	   var endTime = new Date();
-	   tipMsg(fetchUrl + " " +  (endTime.getTime()-startTime.getTime() + "ms").green);
+	   tipMsg(proxtReq.method.yellow + " " + fetchUrl + " " +  (endTime.getTime()-startTime.getTime() + "ms").green + " " + (proxRes.statusCode >= 400 ? (proxRes.statusCode + "").red : (proxRes.statusCode + "").green));
 	});
     req.pipe(proxtReq);
     proxtReq.pipe(res);
@@ -193,15 +191,6 @@ var verifyCert = function(host,callback){
         });
     }
 };
-
-var safelySocketWrite = function(socket,data){
-    try {
-        socket.write(data);
-    }
-    catch(err) {
-        errorMsg(err);
-    }
-}
 
 var getCertHost = function(host){
   return host.split(":")[0];
