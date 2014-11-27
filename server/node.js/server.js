@@ -87,6 +87,13 @@ var nowallServerApp = function() {
 
         var proxyFunc = function(req,res){
 
+            if(req.url.toLowerCase() == "/robots.txt" || req.url.toLowerCase() == "/robots"){
+                fs.readFile(__dirname + '/robots.txt',function(err, content){
+                    return res.end(content);
+                })
+                return;
+            }
+
             if(!req.headers.fetchurl) {
                 return res.end('This is a private page!');
             }
