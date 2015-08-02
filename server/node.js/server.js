@@ -6,7 +6,7 @@ var fs = require("fs");
 var spdy = require('spdy');
 var config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
 var directServer = require("./directProxyServer");
-
+var crypto=require('crypto');
 var spdyOptions = {
     key: fs.readFileSync(__dirname + '/nowall.crt'),
     cert: fs.readFileSync(__dirname + '/nowall.crt'),
@@ -17,6 +17,17 @@ var spdyOptions = {
 
     // **optional** if true - server will send 3.1 frames on 3.0 *plain* spdy
     autoSpdy31: false
+};
+
+var SecKey="nowall*asd123-123";//加密的秘钥
+
+var decryptFunc = function(message){
+    var decipher = crypto.createDecipher('aes-256-cbc',SecKey);
+     var dec=decipher.update(message,'hex','utf8');
+     dec+= decipher.final('utf8');//解密之后的值
+	  console.log("dec-----------------");
+	  console.log(dec);
+	 return dec;
 };
 
 var nowallServerApp = function() {
@@ -98,8 +109,8 @@ var nowallServerApp = function() {
                 return res.end('This is a private page!');
             }
 
-            req.headers.host = req.headers.originalhost;
-            var request_url=req.headers.fetchurl;
+            req.headers.host = decryptFunc(req.headers.originalhost);
+            var request_url=decryptFunc(req.headers.fetchurl);
 
             delete req.headers["fetchurl"];
             delete req.headers["proxy-connection"];
