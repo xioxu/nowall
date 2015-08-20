@@ -99,6 +99,7 @@ function createCSR(options, callback){
     var params = ["req",
         "-new",
             "-" + (options.hash || "sha256"),
+
         "-subj",
         generateCSRSubject(options),
         "-key",
@@ -207,6 +208,9 @@ function createCertificate(options, callback){
         if (!options.serial) {
             return callback(new Error("serial option required for CA signing"));
         }
+
+        //params.push("-default_startdate 100101010159Z");
+
         params.push("-CA");
         params.push("--TMPFILE--");
         params.push("-CAkey");

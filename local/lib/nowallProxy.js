@@ -10,6 +10,8 @@ var https = require('https')
 var spdy = require('spdy');
 var cachedHost= new Array();
 var request = require("request");
+//request = request.defaults({'proxy':'http://localhost:8888'});
+
 var pem =require("./pem");
 var config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
 var proxySiteUrl =config.proxyServerAddr;
@@ -51,6 +53,16 @@ var cipher = ['ECDHE-ECDSA-AES256-SHA',
     'DES-CBC3-SHA',
     'TLS_EMPTY_RENEGOTIATION_INFO_SCSV'].join(":");
 
+var SecKey="nowall*asd123-123";//加密的秘钥
+
+var cryptFunc = function(text){
+       var cipher=  crypto.createCipher('aes-256-cbc',SecKey);
+    var crypted =cipher.update(text,'utf8','hex');
+     crypted+=cipher.final('hex');
+	  console.log(crypted);
+	 return crypted;
+};
+
 var process_options = function(proxy_options) {
     var options = proxy_options || {}
 
@@ -71,11 +83,16 @@ var handle_request = function( that,req, res,type) {
     if(type === "https"){
         fetchUrl = "https://" + req.headers.host + req.url;
     }
-
+	
+	if(fetchUrl.length < 5 || fetchUrl.substr(0,4) != "http"){
+	    fetchUrl = "http://" + req.headers.host + req.url;
+	}
+	
 	var startTime = new Date();
-    req.headers.fetchurl=fetchUrl;
-    req.headers.originalhost = req.headers.host;
-
+    req.headers.fetchurl=cryptFunc(fetchUrl);
+    req.headers.originalhost = cryptFunc(req.headers.host);
+   // req.headers.host = "ec2-54-64-212-132.ap-northeast-1.compute.amazonaws.com:9081";
+	
     var reqOptions = {followRedirect:false};
 
     if(proxySiteUrl.toLowerCase().substr(0,5) === "https"){
@@ -83,6 +100,7 @@ var handle_request = function( that,req, res,type) {
             followRedirect:false,
             rejectUnauthorized: false,
             requestCert: true,
+            timeout:8,
             spdy: {
                 plain: false,
                 ssl: false,
@@ -90,11 +108,15 @@ var handle_request = function( that,req, res,type) {
             }
         };
     }
-
+    
     var proxtReq = request(proxySiteUrl,reqOptions);
 	proxtReq.on("response",function(proxRes){
 	   var endTime = new Date();
 	   tipMsg(proxtReq.method.yellow + " " + fetchUrl + " " +  (endTime.getTime()-startTime.getTime() + "ms").green + " " + (proxRes.statusCode >= 400 ? (proxRes.statusCode + "").red : (proxRes.statusCode + "").green));
+	});
+	
+	proxtReq.on("error",function(err){
+	tipMsg(err);
 	});
     req.pipe(proxtReq);
     proxtReq.pipe(res);
