@@ -1,12 +1,5 @@
 {
-    "backupUrl":" https://ec2-54-64-212-132.ap-northeast-1.compute.amazonaws.com:9082 http://t.datafiddle.net",
-    "b2":"https://ec2-54-64-212-132.ap-northeast-1.compute.amazonaws.com/ https://localhost:8089",
-	"bj":"http://nowall-server-bj-1c3c7.coding.io/   hongxing proxy: https://kfc0202d1.pw:443  kfc0202f1.pw",
-	"hk":"http://nowall-server-2add6.codingapp.com/",
-    "hk2":"http://nowall-server-golang-ea5f6.codingapp.com/",
-	"a2":"http://ec2-54-64-212-132.ap-northeast-1.compute.amazonaws.com:9088",
-	"a1":"http://138.128.208.221:9081",
-    "proxyServerAddr":"http://nowall-server-2add6.codingapp.com/",
+    "proxyServerAddr":"yout server addr(http or https)",
 	"httpProxyPort":"8787",
 	"internalUseMitmPort":"8788",
 	"Debug":true
