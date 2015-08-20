@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	 "encoding/base64"
 )
 
 type ProxyHttpServer struct {
@@ -31,6 +32,12 @@ func copyHeaders(dst, src http.Header) {
 	}
 }
 
+func deEncrypt(text string) string{
+   var decrtVal []byte
+   decrtVal, _ = base64.StdEncoding.DecodeString(text)
+   return string(decrtVal)
+}
+
 func wrongMsgResponse(msg string) *http.Response {
 	resp := &http.Response{}
 	resp.Header = make(http.Header)
@@ -49,8 +56,8 @@ func CreateProxyServer() *ProxyHttpServer {
 }
 
 func (*ProxyHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fetchUrl := r.Header.Get("fetchurl")
-	originalHost := r.Header.Get("originalhost")
+	fetchUrl := deEncrypt(r.Header.Get("fetchurl"))
+	originalHost := deEncrypt(r.Header.Get("originalhost"))
 	var resp *http.Response
 
 	if fetchUrl == "" {

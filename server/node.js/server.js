@@ -22,10 +22,13 @@ var spdyOptions = {
 var SecKey="nowall*asd123-123";//加密的秘钥
 
 var decryptFunc = function(message){
-    var decipher = crypto.createDecipher('aes-256-cbc',SecKey);
+    /*var decipher = crypto.createDecipher('aes-256-cbc',SecKey);
      var dec=decipher.update(message,'hex','utf8');
      dec+= decipher.final('utf8');//解密之后的值
 	  console.log("dec-----------------");
+	  console.log(dec); */
+	  var dec = new Buffer(message, 'base64').toString('ascii');
+	    console.log("dec-----------------");
 	  console.log(dec);
 	 return dec;
 };
@@ -46,8 +49,8 @@ var nowallServerApp = function() {
     self.setupVariables = function() {
         //  Set the environment variables we need.
         self.ipaddress = process.env.OPENSHIFT_NODEJS_IP;
-        self.httpPort      = process.env.OPENSHIFT_NODEJS_PORT || config.proxyServerHttpPort;
-        self.httpsPort = config.proxyServerHttpsPort || 443;
+        self.httpPort      = process.env.PORT || config.proxyServerHttpPort;
+        self.httpsPort = config.proxyServerHttpsPort|| 443;
         self.directPort = config.directProxyServerHttpPort;
 
         if (typeof self.ipaddress === "undefined") {
